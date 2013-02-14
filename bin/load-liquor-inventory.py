@@ -2,7 +2,7 @@
 import sys
 import _mypath
 
-from drinkz.load_bulk_data import load_bottle_types
+from drinkz.load_bulk_data import load_inventory
 
 def main(args):
    if len(args) != 2:
@@ -13,11 +13,11 @@ def main(args):
 
    fp = open(filename)
    try:
-      n = load_bottle_types(fp)
+      n = load_inventory(fp)
    finally:
       fp.close()
 
-   print 'Loaded %d bottle types.' % n
+   print 'Loaded %d bottles in inventroy.' % n
    return 0
     
 # run the 'main()' function if this script is run from the command line;
