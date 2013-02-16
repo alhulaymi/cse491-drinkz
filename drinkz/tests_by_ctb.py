@@ -40,6 +40,7 @@ def test_script_load_liquor_inventory():
     db._reset_db()
 
     scriptpath = 'bin/load-liquor-inventory'
+    print scriptpath
     module = imp.load_source('llt', scriptpath)
     exit_code = module.main([scriptpath, 'test-data/bottle-types-data-1.txt',
                              'test-data/inventory-data-1.txt'])

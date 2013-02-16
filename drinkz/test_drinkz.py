@@ -43,7 +43,7 @@ def test_sum_amount_uniform():
     
     print "uniform amount adding method failed"
     print total_amount
-    assert total_amount == "2.0 ml"
+    assert total_amount == 2.0
     
     
 # this will test some amounts by oz and some by ml
@@ -61,8 +61,8 @@ def test_sum_amount_diverse():
     total_amount = db.get_liquor_amount(mfg,liqur)
     
     print "diverse amount adding method failed"
-    print total_amount
-    assert total_amount == "30.5735 ml"
+    print "check this out: " + str(total_amount)
+    assert total_amount == 30.5735
     
 
 def test_load_bulk_bottle_types_1():
@@ -151,7 +151,7 @@ def test_get_liquor_amount_1():
     db.add_bottle_type('Johnnie Walker', 'Black Label', 'blended scotch')
     db.add_to_inventory('Johnnie Walker', 'Black Label', '1000 ml')
     amount = db.get_liquor_amount('Johnnie Walker', 'Black Label')
-    assert amount == '1000.0 ml', amount
+    assert amount == 1000.0, amount
 
 def test_bulk_load_inventory_1():
     db._reset_db()
@@ -175,7 +175,7 @@ def test_get_liquor_amount_2():
     n = load_bulk_data.load_inventory(fp)
 
     amount = db.get_liquor_amount('Johnnie Walker', 'Black Label')
-    assert amount == '1000.0 ml', amount
+    assert amount == 1000.0, amount
 
 def test_bulk_load_bottle_types_1():
     db._reset_db()
@@ -195,9 +195,9 @@ def test_script_load_bottle_types_1():
     assert exit_code == 0, 'non zero exit code %s' % exit_code
     
 def test_script_load_bottle_amounts_1():
-    scriptpath = 'bin/load-liquor-inventory.py'
+    scriptpath = 'bin/load-liquor-inventory'
     module = imp.load_source('llt', scriptpath)
-    exit_code = module.main([scriptpath, 'test-data/bottle-amounts-data-1.txt'])
+    exit_code = module.main([scriptpath, 'test-data/bottle-amounts-data-1.txt', 'test-data/inventory-data-1.txt'])
 
     assert exit_code == 0, 'non zero exit code %s' % exit_code
     

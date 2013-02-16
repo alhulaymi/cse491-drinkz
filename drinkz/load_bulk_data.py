@@ -75,7 +75,7 @@ def data_reader(fp):
                 continue
         except IndexError:
             print "index error raised while trying to read line in CSV"
-        else:
+        except:
             print "error reading a line"
             pass
         

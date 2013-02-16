@@ -1,10 +1,20 @@
 """
 Database functionality for drinkz information.
+
+Dictionaries and sets are faster in search.
+Sets pro: mathematical operations (i.e. intersection, union)
+Dictionaries pro: look up by key.
+ I chose dictionaries for easier and safer coding
+
+
 """
+
+import drinkz.recipes.py
 
 # private singleton variables at module level
 _bottle_types_db = set()
 _inventory_db = {}
+_recipes_db = {}
 
 def _reset_db():
     "A method only to be used during testing -- toss the existing db info."
@@ -25,7 +35,6 @@ def _check_bottle_type_exists(mfg, liquor):
     for (m, l, _) in _bottle_types_db:
         if mfg == m and liquor == l:
             return True
-
     return False
 
 def add_to_inventory(mfg, liquor, amount):
@@ -35,9 +44,11 @@ def add_to_inventory(mfg, liquor, amount):
         raise LiquorMissing(err)
 
     if((mfg, liquor) in _inventory_db):
-        _inventory_db[(mfg, liquor)] = add_two_amounts(amount, _inventory_db[(mfg, liquor)])
+        _inventory_db[(mfg, liquor)] = str(add_two_amounts(amount, _inventory_db[(mfg, liquor)])) + " ml"
+        print "just added into " + str(_inventory_db[(mfg, liquor)])
     else:
-        _inventory_db[(mfg, liquor)] = amount
+        _inventory_db[(mfg, liquor)] = str(add_two_amounts("0 ml",amount)) + " ml"
+        print "just added into " + str(_inventory_db[(mfg, liquor)])
 
 def check_inventory(mfg, liquor):
     for (m, l) in _inventory_db:
@@ -54,13 +65,18 @@ def get_liquor_amount(mfg, liquor):
             amounts.append(_inventory_db[key])
     
     # the result we will eventually return
-    final_amount = 0
+    
+    final_amount = float(_inventory_db[(mfg, liquor)].split()[0])
+    print "final amount: " + str(final_amount)
+    return final_amount
     
     # go through the matching inventory
     for single_item in amounts:
         print single_item
         amount_string =single_item.split()[0]
+        print amount_string
         unit =single_item.split()[1]
+        print unit
         amount = float(amount_string)
         
         # Unit handling
@@ -71,22 +87,57 @@ def get_liquor_amount(mfg, liquor):
             final_amount += (amount*29.5735)
     
     # back to string and return
-    return str(final_amount) + " ml"
+    return final_amount
     
 def add_two_amounts(first,second):
-    first_int = float(first.split()[0])
+    first_float = float(first.split()[0])
     f_unit = first.split()[1]
-    second_int = float(second.split()[0])
+    second_float = float(second.split()[0])
     s_unit = second.split()[1]
+    
     if(f_unit == "oz"):
-        first_int = first_int * 29.5735
+        first_float = first_float * 29.5735
+    elif(f_unit == "gallon"):
+        first_float = first_float * 3785.41
+        
     if(s_unit == "oz"):
-            second_int = second_int * 29.5735
-    final_amount = first_int + second_int
-    return str(final_amount)+" ml"
+            second_float = second_float * 29.5735
+    elif(s_unit == "gallon"):
+            second_float = second_float * 3785.41
+            
+    final_amount = first_float + second_float
+    print "first: " + first + " second: " + second + " = " + str(final_amount)
+    return final_amount
 
 
 def get_liquor_inventory():
     "Retrieve all liquor types in inventory, in tuple form: (mfg, liquor)."
     for (m, l) in _inventory_db:
         yield m, l
+
+
+# Input r: recipe object
+# Output: False if a recipe with the same name exists
+#         True otherwise
+def add_recipe(r):
+    if(r.name in list(_recipes_db.keys()):
+        return false
+    else:
+        _recipes_db[r.name] = r.ingredients
+    return True
+    
+#Input: string
+#Output: list of tuples  
+def get_recipe(name):
+    if(name in list(_recipes_db.keys()):
+        return []
+    else:
+        return _recipes_db[name]
+    
+
+def get_all_recipes():
+    all = {}
+    for key in _recipes_db:
+        all[key] = _recipes_db
+        
+    return all
