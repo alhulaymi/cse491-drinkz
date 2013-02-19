@@ -1,27 +1,31 @@
 """
 Database functionality for drinkz information.
 
-Dictionaries and sets are faster in search.
-Sets pro: mathematical operations (i.e. intersection, union)
-Dictionaries pro: look up by key.
- I chose dictionaries for easier and safer coding
+I chose set for recipe:
+    
+Why not list? Aside from the fact that your hint said not to, checking for duplication will take more work.
+Why not dictionary? taking Rcipe objects, converting them to keys (by names) and value (list of tuples of ingredients) will require us to
+                    convert them back to a Recipe objects as return value for some of the functions. Which means we need to import the
+                    Recipe class. We don't want that. We don't want to import Recipe class into this file because we need to import this
+                    file into recipes.py later. I could've used the names as keys and the actual recipes as values but that will be somewhat
+                    of duplications.
 
-
+ 
 """
 
-import recipes
+#import recipes
 
 # private singleton variables at module level
 _bottle_types_db = set()
 _inventory_db = {}
-_recipes_db = {}
+_recipes_db = set()
 
 def _reset_db():
     "A method only to be used during testing -- toss the existing db info."
     global _bottle_types_db, _inventory_db, _recipes_db
     _bottle_types_db = set()
     _inventory_db = {}
-    _recipes_db = {}
+    _recipes_db = set()
 
 # exceptions in Python inherit from Exception and generally don't need to
 # override any methods.
@@ -47,6 +51,7 @@ def add_to_inventory(mfg, liquor, amount):
         err = "Missing liquor: manufacturer '%s', name '%s'" % (mfg, liquor)
         raise LiquorMissing(err)
 
+    # if you give me a mfg and a liquor that alread exists, I'll just add them up
     if((mfg, liquor) in _inventory_db):
         _inventory_db[(mfg, liquor)] = str(add_two_amounts(amount, _inventory_db[(mfg, liquor)])) + " ml"
     else:
@@ -61,8 +66,6 @@ def check_inventory(mfg, liquor):
 
 def get_liquor_amount(mfg, liquor):
     "Retrieve the total amount of any given liquor currently in inventory."
-
-    
     # the result we will eventually return
     
     final_amount = float(_inventory_db[(mfg, liquor)].split()[0])
@@ -88,25 +91,24 @@ def get_liquor_inventory():
 # Output: False if a recipe with the same name exists
 #         True otherwise
 def add_recipe(r):
-    if(r.name in list(_recipes_db.keys())):
-        return False
-    else:
-        _recipes_db[r.name] = r.ingredients
-        return True
+    _recipes_db.add(r)
     
 #Input: string
 #Output: Recipe object or false if it doesn't exist 
 def get_recipe(name):
-    if(name in list(_recipes_db.keys())):
-        return recipes.Recipe(name,_recipes_db[name])
-    else:
-        return False
+    listRecipes = list(_recipes_db)
+    for i in range(len(listRecipes)):
+        print type(name)
+        print type(listRecipes[i].name)
+        if name == listRecipes[i].name:
+            return listRecipes[i]
+    return 0
     
 
 def get_all_recipes():
     all = []
     for key in _recipes_db:
-        all.append(get_recipe(key))
+        all.append(key)
     return all
  
 #
