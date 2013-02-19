@@ -20,7 +20,6 @@ class TestBasicRecipeStuff(unittest.TestCase):
                                                    '4 oz')])
 
         db.add_recipe(r)
-
         x = list(db.get_all_recipes())
         assert len(x) == 1              # should be only one recipe
         assert r in x
@@ -47,7 +46,9 @@ class TestBasicRecipeStuff(unittest.TestCase):
         assert x == r
 
     def test_get_recipe_2(self):
+        
         x = db.get_recipe('scotch on the rocks')
+        
         assert not x, x                    # no such recipe
 
 class TestIngredients(object):
