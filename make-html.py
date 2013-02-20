@@ -6,12 +6,11 @@ from drinkz import db,recipes
 
 # Populating the db
 
-recipe1 = recipes.Recipe('vodka martini', [('unflavored vodka', '6 oz'),
-                                            ('vermouth', '1.5 oz')])
-                                            
-recipe2 =  recipes.Recipe('vomit inducing martini', [('orange juice',
-                                                      '6 oz'),
-                                                     ('vermouth',
+recipe1 = recipes.Recipe('vodka martini', [('vermouth', '1.5 oz')])
+
+recipe2 =  recipes.Recipe('vomit inducing martini', [('blended scotch',
+                                                      '2 oz'),
+                                                     ('unflavored vodka',
                                                       '1.5 oz')])
 
 mfg1 = 'Uncle Herman\'s'
@@ -72,13 +71,21 @@ fp = open('html/recipes.html', 'w')
 print >>fp,"""
 
 <table border=\"1\" cellpadding =\"5\">
-<tr><th>Name</th><th>Ingredients</th></tr>
+<tr><th>Name</th><th>Ingredients</th><th>Are we missing anything?</tr>
 """
 for recipe in db.get_all_recipes():
     print >>fp,"<tr><td> %s </td><td><table cellpadding =\"5\">" % recipe.name
     for item in recipe.ingredients:
         print >>fp, "<tr><td> %s </td><td> %s </td></tr>" % item
-    print >>fp,"</table></td></tr>"
+    print >>fp,"</table></td><td>"
+    
+    missing = recipe.need_ingredients()
+    if(missing):
+        print >>fp,"we're missing some stuff, call Mikey"
+    else:
+        print >>fp,"nope, we're good to go, call Mikey"
+    
+    print >>fp,"</td></tr>"
 
 
 print >>fp,"""
