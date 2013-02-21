@@ -78,3 +78,4 @@ class Recipe(object):
             print i
             if(not (self.ingredients in other.ingredients)):
                 return False
+        return True
