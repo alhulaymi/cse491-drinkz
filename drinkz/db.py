@@ -31,6 +31,9 @@ def _reset_db():
 # override any methods.
 class LiquorMissing(Exception):
     pass
+    
+class DuplicateRecipeName(Exception):
+    pass
 
 def get_bottle_types():
     return list(_bottle_types_db)
@@ -85,13 +88,6 @@ def get_liquor_inventory():
     "Retrieve all liquor types in inventory, in tuple form: (mfg, liquor)."
     for (m, l) in _inventory_db:
         yield m, l
-
-
-# Input r: recipe object
-# Output: False if a recipe with the same name exists
-#         True otherwise
-def add_recipe(r):
-    _recipes_db.add(r)
     
 #Input: string
 #Output: Recipe object or false if it doesn't exist 
@@ -102,7 +98,19 @@ def get_recipe(name):
         print type(listRecipes[i].name)
         if name == listRecipes[i].name:
             return listRecipes[i]
-    return 0
+    return False
+    
+# Input r: recipe object
+# Output: False if a recipe with the same name exists
+#         True otherwise
+def add_recipe(r):
+    if(not get_recipe(r.name)):
+        print "already exist"
+        _recipes_db.add(r)
+        return True
+    err = "Duplicate recipe: name '%s'" % r.name
+    raise DuplicateRecipeName(err)
+    #return False
     
 
 def get_all_recipes():

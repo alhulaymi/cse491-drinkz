@@ -31,12 +31,9 @@ def load_bottle_types(fp):
         print "failed to process the file using your fancy new function"
         pass
         
-    try:
-        x = []
-        n = 0
-    except:
-        print "that's weird! failed to assign values to simple variables. This just got serious"
-        pass
+    x = []
+    n = 0
+
         
     for line in new_reader:
         try:
@@ -63,12 +60,18 @@ def data_reader(fp):
         pass
         
     for line in reader:
+        
         try:
             if not line:
                 continue
         except:
             print "fatal error while detecting empty line"
             pass
+        
+        #print "line: "+str(line)
+        
+        if len(line) != 3:
+            continue
             
         try:
             if line[0].startswith('#'):
