@@ -118,6 +118,12 @@ def get_all_recipes():
     for key in _recipes_db:
         all.append(key)
     return all
+
+def get_all_recipes_names():
+    all = []
+    for key in _recipes_db:
+        all.append(key.name)
+    return all
  
 #
 # input string

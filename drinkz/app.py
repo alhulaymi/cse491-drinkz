@@ -3,19 +3,74 @@ from wsgiref.simple_server import make_server
 import urlparse
 import simplejson
 
+import os
+
+import db,recipes
+
+# Populating the db
+
+recipe1 = recipes.Recipe('vodka martini', [('vermouth', '1.5 oz')])
+
+recipe2 =  recipes.Recipe('vomit inducing martini', [('blended scotch',
+                                                      '2 oz'),
+                                                     ('unflavored vodka',
+                                                      '1.5 oz')])
+
+mfg1 = 'Uncle Herman\'s'
+mfg2 = 'Gray Goose'
+
+liquor1 = 'moonshine'
+liquor2 = 'vodka'
+
+type1 = 'blended scotch'
+type2 = 'unflavored vodka'
+
+amount1 = '5 liter'
+amount2 = '1 gallon'
+
+db.add_recipe(recipe1)
+db.add_recipe(recipe2)
+
+db.add_bottle_type(mfg1,liquor1,type1)
+db.add_bottle_type(mfg2,liquor2,type2)
+db.add_bottle_type(mfg1,liquor2,type2)
+db.add_bottle_type(mfg2,liquor1,type1)
+
+
+db.add_to_inventory(mfg1, liquor1, amount1)
+db.add_to_inventory(mfg2, liquor2, amount2)
+db.add_to_inventory(mfg1, liquor2, amount2)
+db.add_to_inventory(mfg2, liquor1, amount1)
+
+def printMenu():
+    menu = """</br>
+    </br>
+    <h3> Menu </h3>
+    <a href='/'>Home</a></br>
+    <a href='recipes'>Recipes</a></br>
+    <a href='inventory'>Inventory</a></br>
+    <a href='liquor_types'>Liquor Types</a></br>
+    <a href='convert_to_ml'>Convert amount</a></br>
+    """
+    
+    return menu
+    
+
+
 dispatch = {
     '/' : 'index',
     '/recipes' : 'recipes',
     '/error' : 'error',
-    '/helmet' : 'helmet',
-    '/form' : 'form',
-    '/recv' : 'recv',
+    '/inventory' : 'inventory',
+    '/liquor_types' : 'liquor_types',
+    '/convert_result' : 'convert_result',
+    '/convert_to_ml' : 'convert_form',
     '/rpc'  : 'dispatch_rpc'
 }
 
 html_headers = [('Content-type', 'text/html')]
 
-class SimpleApp(object):
+class SimpleApp(object): 
     def __call__(self, environ, start_response):
 
         path = environ['PATH_INFO']
@@ -31,22 +86,75 @@ class SimpleApp(object):
             return ["No path %s found" % path]
 
         return fn(environ, start_response)
+        
+    
+    def buildHtmlPage(self,title,head,body):
+        page = """
+                        <html>
+                        <head>
+                      """
+        page = page + head
+        
+        page = page + """
+                        <style type=\"text/css\">
+                        h1 {color:red;}
+                        p {color:blue;}
+                        </style>
+                        </head>
+                        <body>
+                      """
+        page = page +"<h1>" + title + "</h1>"
+        
+        
+        page = page + body
+        
+        page = page + "</body>"
+        
+        return page
             
     def index(self, environ, start_response):
+        
         data = """
-
-        <a href='recipes.html'>Recipes</a></br>
-        <a href='inventory.html'>Inventory</a></br>
-        <a href='liquor_types.html'>Liquor Types</a></br>
-
-        """
+                <input type=\"button\" onclick=\"legalNotice()\" value=\"Legal Note\" />"""
+        data = data + printMenu()
+        script = """
+                <script>
+                function legalNotice()
+                {
+                    alert('Minions and hellhounds might seek remedies for services provided here');
+                }
+                </script>
+             """
+        data = self.buildHtmlPage("Main Page",script,data)
         start_response('200 OK', list(html_headers))
         return [data]
         
     def recipes(self, environ, start_response):
         content_type = 'text/html'
-        data = open('somefile.html').read()
+        data = """
 
+        <table border=\"1\" cellpadding =\"5\">
+        <tr><th>Name</th><th>Ingredients</th><th>Are we missing anything?</tr>
+        """
+        for recipe in db.get_all_recipes():
+            data = data + "<tr><td> "+ recipe.name +"</td><td><table cellpadding =\"5\">"
+            for item in recipe.ingredients:
+                data = data + "<tr><td>"+ item[0] +"</td><td> " + item[1] +" </td></tr>"
+            data = data + "</table></td><td>"
+            
+            missing = recipe.need_ingredients()
+            if(missing):
+                data = data + "we're missing some stuff, call Mikey"
+            else:
+                data = data + "nope, we're good to go, call Mikey"
+            
+            print data + "</td></tr>"
+        data = data + "</table>"
+
+        menu = printMenu()
+        
+        data = data + menu
+        data = self.buildHtmlPage("Recipes","",data)
         start_response('200 OK', list(html_headers))
         return [data]
 
@@ -58,29 +166,62 @@ class SimpleApp(object):
         start_response('200 OK', list(html_headers))
         return [data]
 
-    def helmet(self, environ, start_response):
-        content_type = 'image/gif'
-        data = open('Spartan-helmet-Black-150-pxls.gif', 'rb').read()
-
+    def inventory(self, environ, start_response):
+        content_type = 'text/html'
+        data = """
+        <table border=\"1\" cellpadding =\"5\">
+        <tr><th>Manfacturer</th><th>Liquor</th><th>Amount</th></tr>
+        """
+        for item in db.get_liquor_inventory_with_amounts():
+            data = data + "<tr><td> "+ item[0] +" </td><td> "+item[1]+" </td><td> "+item[2]+" </td></tr>"
+        data = data + "</table>"
+        
+        data = data + printMenu()
+        data = self.buildHtmlPage("Inventory","",data)
+        start_response('200 OK', [('Content-type', content_type)])
+        return [data]
+        
+    def liquor_types(self, environ, start_response):
+        content_type = 'text/html'
+        data = """
+        <table border=\"1\" cellpadding =\"5\">
+        <tr><th>Manfacturer</th><th>Liquor</th><th>Type</th></tr>
+        """
+        for item in db.get_bottle_types():
+            data = data + "<tr><td> %s </td><td> %s </td><td> %s </td></tr>" % item
+        
+        data = data + "</table>"
+        
+        data = data + printMenu()
+        data = self.buildHtmlPage("Liquor Types","",data)
         start_response('200 OK', [('Content-type', content_type)])
         return [data]
 
-    def form(self, environ, start_response):
+    def convert_form(self, environ, start_response):
         data = form()
-
+        script = """
+                    <script>
+                    function askAboutSoul()
+                    {
+                        alert('Your soul will be owed to Satan in return for this dark dark knowledge');
+                    }
+                    </script>
+                 """
+        data = self.buildHtmlPage("Conversion Witchcraft",script,data)
         start_response('200 OK', list(html_headers))
         return [data]
    
-    def recv(self, environ, start_response):
+    def convert_result(self, environ, start_response):
         formdata = environ['QUERY_STRING']
         results = urlparse.parse_qs(formdata)
 
-        firstname = results['firstname'][0]
-        lastname = results['lastname'][0]
+        ml_amount = db.convert_to_ml(results['amount'][0])
 
         content_type = 'text/html'
-        data = "First name: %s; last name: %s.  <a href='./'>return to index</a>" % (firstname, lastname)
-
+        data = "Amount entered: %s:" % (str(ml_amount)+" ml")
+        
+        data = data + printMenu()
+        data = self.buildHtmlPage("The Witch Has Spoken","",data)
         start_response('200 OK', list(html_headers))
         return [data]
 
@@ -129,15 +270,29 @@ class SimpleApp(object):
 
     def rpc_add(self, a, b):
         return int(a) + int(b)
+        
+    def rpc_convert_units_to_ml(self, amount):
+        return str(db.convert_to_ml(amount))+" ml"
+        
+    def rpc_get_recipe_names(self):
+        return str(db.get_all_recipes_names())
+
+    def rpc_get_liquor_inventory(self):
+        inventories = db.get_liquor_inventory()
+        inventory_list = []
+        for inventory in inventories:
+            inventory_list.append((inventory[0],inventory[1]))
+        return inventory_list
     
 def form():
     return """
-<form action='recv'>
-Your first name? <input type='text' name='firstname' size'20'>
-Your last name? <input type='text' name='lastname' size='20'>
-<input type='submit'>
+<form action='convert_result'>
+How much liq... I mean fun you've got? <input type='text' name='amount' placeholder='amount unit' size'20'>
+<input type='submit' onclick='askAboutSoul()' value='Sell Your Soul'>
 </form>
 """
+
+
 
 if __name__ == '__main__':
     import random, socket
