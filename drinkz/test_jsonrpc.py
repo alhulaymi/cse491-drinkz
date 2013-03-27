@@ -88,7 +88,6 @@ def test_rpc_convert_units_to_ml():
     answer = text_array["result"]
     
     assert text.find("13500.0 ml") != -1, text
-    #print headers
     assert ('Content-Type', 'application/json') in headers
     assert status == '200 OK'
     
@@ -123,7 +122,7 @@ def test_rpc_get_recipe_names():
     
     assert text.find("youth fountain martini") != -1, text
     assert text.find("godly vodka") != -1, text
-    #print headers
+ 
     assert ('Content-Type', 'application/json') in headers
     assert status == '200 OK'
     
@@ -179,16 +178,5 @@ def test_rpc_get_liquor_inventory():
     assert text.find("[\"Gray Goose\", \"vodka\"]") != -1, text
     assert text.find("[\"Gray Goose\", \"moonshine\"]") != -1, text
     
-    #print headers
     assert ('Content-Type', 'application/json') in headers
     assert status == '200 OK'
-
-#print 'hello!', call_remote(server_base, method='hello', params=[], id=1)
-
-#print 'add:', call_remote(server_base, method='add', params=[1, 2], id=1)
-
-#print 'convert:', call_remote(server_base, method='convert_units_to_ml', params=["2 liter"], id=1)
-
-#print 'all recipes:', call_remote(server_base, method='get_recipe_names', params=[], id=1)
-
-#print 'inventory:', call_remote(server_base, method='get_liquor_inventory', params=[], id=1)
