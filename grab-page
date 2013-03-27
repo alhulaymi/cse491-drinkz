@@ -1,0 +1,26 @@
+import socket, sys
+
+import sys
+
+if len(sys.argv) != 3:
+    print "Usage: python2.7 grab-page <host> <port>"
+    exit(0)
+
+host = sys.argv[1]
+port = int(sys.argv[2])
+
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+s.connect((host, port))
+s.send("GET / HTTP/1.1\r\n\r\n")
+
+while 1:
+    buf = s.recv(1000)
+    if not buf:
+        break
+    sys.stdout.write(buf)
+
+s.close()
+
+#courtesy of your link:
+#http://effbot.org/zone/socket-intro.htm

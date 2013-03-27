@@ -1,0 +1,93 @@
+(c__builtin__
+set
+p1
+((lp2
+ccopy_reg
+_reconstructor
+p3
+(cdrinkz.recipes
+Recipe
+p4
+c__builtin__
+object
+p5
+NtRp6
+(dp7
+S'name'
+p8
+S'vodka martini'
+p9
+sS'ingredients'
+p10
+(lp11
+(S'vermouth'
+p12
+S'1.5 oz'
+p13
+tp14
+asbag3
+(g4
+g5
+NtRp15
+(dp16
+g8
+S'vomit inducing martini'
+p17
+sg10
+(lp18
+(S'blended scotch'
+p19
+S'2 oz'
+p20
+tp21
+a(S'unflavored vodka'
+p22
+g13
+tp23
+asbatRp24
+g1
+((lp25
+(S'Gray Goose'
+p26
+S'vodka'
+p27
+g22
+tp28
+a(S"Uncle Herman's"
+p29
+g27
+g22
+tp30
+a(g29
+S'moonshine'
+p31
+g19
+tp32
+a(g26
+g31
+g19
+tp33
+atRp34
+(dp35
+(g29
+g27
+tp36
+S'3785.41 ml'
+p37
+s(g29
+g31
+tp38
+S'5000.0 ml'
+p39
+s(g26
+g31
+tp40
+S'5000.0 ml'
+p41
+s(g26
+g27
+tp42
+S'3785.41 ml'
+p43
+stp44
+.

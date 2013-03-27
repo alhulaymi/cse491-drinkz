@@ -1,0 +1,44 @@
+import _mypath
+
+import sys
+
+from drinkz import db,recipes
+
+# Populating the db
+
+recipe1 = recipes.Recipe('vodka martini', [('vermouth', '1.5 oz')])
+
+recipe2 =  recipes.Recipe('vomit inducing martini', [('blended scotch',
+                                                      '2 oz'),
+                                                     ('unflavored vodka',
+                                                      '1.5 oz')])
+
+mfg1 = 'Uncle Herman\'s'
+mfg2 = 'Gray Goose'
+
+liquor1 = 'moonshine'
+liquor2 = 'vodka'
+
+type1 = 'blended scotch'
+type2 = 'unflavored vodka'
+
+amount1 = '5 liter'
+amount2 = '1 gallon'
+
+db.add_recipe(recipe1)
+db.add_recipe(recipe2)
+
+db.add_bottle_type(mfg1,liquor1,type1)
+db.add_bottle_type(mfg2,liquor2,type2)
+db.add_bottle_type(mfg1,liquor2,type2)
+db.add_bottle_type(mfg2,liquor1,type1)
+
+
+db.add_to_inventory(mfg1, liquor1, amount1)
+db.add_to_inventory(mfg2, liquor2, amount2)
+db.add_to_inventory(mfg1, liquor2, amount2)
+db.add_to_inventory(mfg2, liquor1, amount1)
+
+file_name = sys.argv[1]
+
+db.save_db(file_name)
