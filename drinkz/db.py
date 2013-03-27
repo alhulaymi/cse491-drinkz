@@ -16,6 +16,10 @@ Why not dictionary? taking Rcipe objects, converting them to keys (by names) and
 
 from cPickle import dump, load
 
+import os
+
+import db,recipes
+
 # private singleton variables at module level
 _bottle_types_db = set()
 _inventory_db = {}
@@ -30,18 +34,20 @@ def _reset_db():
 
 def save_db(filename):
     fp = open(filename, 'wb')
-
-    tosave = (_bottle_types_db, _inventory_db)
+    
+    tosave = (_recipes_db,_bottle_types_db, _inventory_db)
+    
+    
     dump(tosave, fp)
 
     fp.close()
 
 def load_db(filename):
-    global _bottle_types_db, _inventory_db
+    global _recipes_db,_bottle_types_db, _inventory_db
     fp = open(filename, 'rb')
 
     loaded = load(fp)
-    (_bottle_types_db, _inventory_db) = loaded
+    (_recipes_db,_bottle_types_db, _inventory_db) = loaded
 
     fp.close()
 
@@ -112,8 +118,8 @@ def get_liquor_inventory():
 def get_recipe(name):
     listRecipes = list(_recipes_db)
     for i in range(len(listRecipes)):
-        print type(name)
-        print type(listRecipes[i].name)
+        #print type(name)
+        #print type(listRecipes[i].name)
         if name == listRecipes[i].name:
             return listRecipes[i]
     return False
@@ -123,7 +129,7 @@ def get_recipe(name):
 #         True otherwise
 def add_recipe(r):
     if(not get_recipe(r.name)):
-        print "already exist"
+        
         _recipes_db.add(r)
         return True
     err = "Duplicate recipe: name '%s'" % r.name

@@ -5,42 +5,11 @@ import simplejson
 
 import os
 
-import db,recipes
+import db, recipes
 
-# Populating the db
+def load_db_file(file_name):
+    db.load_db(file_name)
 
-recipe1 = recipes.Recipe('vodka martini', [('vermouth', '1.5 oz')])
-
-recipe2 =  recipes.Recipe('vomit inducing martini', [('blended scotch',
-                                                      '2 oz'),
-                                                     ('unflavored vodka',
-                                                      '1.5 oz')])
-
-mfg1 = 'Uncle Herman\'s'
-mfg2 = 'Gray Goose'
-
-liquor1 = 'moonshine'
-liquor2 = 'vodka'
-
-type1 = 'blended scotch'
-type2 = 'unflavored vodka'
-
-amount1 = '5 liter'
-amount2 = '1 gallon'
-
-db.add_recipe(recipe1)
-db.add_recipe(recipe2)
-
-db.add_bottle_type(mfg1,liquor1,type1)
-db.add_bottle_type(mfg2,liquor2,type2)
-db.add_bottle_type(mfg1,liquor2,type2)
-db.add_bottle_type(mfg2,liquor1,type1)
-
-
-db.add_to_inventory(mfg1, liquor1, amount1)
-db.add_to_inventory(mfg2, liquor2, amount2)
-db.add_to_inventory(mfg1, liquor2, amount2)
-db.add_to_inventory(mfg2, liquor1, amount1)
 
 def printMenu():
     menu = """</br>
@@ -87,7 +56,9 @@ class SimpleApp(object):
 
         return fn(environ, start_response)
         
-    
+    def load_db_file(self, file_name):
+        db.load_db(file_name)
+        
     def buildHtmlPage(self,title,head,body):
         page = """
                         <html>
@@ -234,6 +205,9 @@ class SimpleApp(object):
             body = None
             if environ.get('CONTENT_LENGTH'):
                 length = int(environ['CONTENT_LENGTH'])
+                #print "wsgi: "
+                #print environ['wsgi.input'].read(length)
+                #print "-=-=-=-"
                 body = environ['wsgi.input'].read(length)
                 response = self._dispatch(body) + '\n'
                 start_response('200 OK', [('Content-Type', 'application/json')])
