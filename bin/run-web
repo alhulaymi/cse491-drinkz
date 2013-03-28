@@ -4,6 +4,8 @@ import urlparse
 import simplejson
 import sys
 
+DBFile = "db.txt"
+
 from drinkz import db,recipes
 
 from drinkz.app import SimpleApp
@@ -12,7 +14,7 @@ import random, socket
 port = random.randint(8000, 9999)
 
 app = SimpleApp()
-app.load_db_file("db.txt")
+app.load_db_file(DBFile)
 httpd = make_server('', port, app)
 print "Serving on port %d..." % port
 print "Try using a Web browser to go to http://%s:%d/" % \
