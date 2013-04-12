@@ -1,0 +1,4 @@
+# a simple example of a "good" data file.
+shoshi, blended scotch, 20 ml, blended vodka, 3 oz
+
+shasha, blended scotch, 2 oz, blended vodka, 3 liter

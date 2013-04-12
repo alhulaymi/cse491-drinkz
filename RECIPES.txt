@@ -1,0 +1,7 @@
+You can load recipes the same way you load inventory or bottle types bulk of data.
+
+The format is the name, drink, amount unit, drink, amount unit
+
+An example would be:
+test-data/recipes-testing-data-1.tx
+test-data/recipes-testing-data-2.tx

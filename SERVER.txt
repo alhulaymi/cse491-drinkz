@@ -1,0 +1,5 @@
+to run the server:
+
+python2.7 bin/server.py
+
+At this point, it accepts only GET requests (including GET forms)
