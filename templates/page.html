@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block head %}
+
+<style type="text/css">
+h1 {color:red;}
+p {color:blue;}
+.sidebar {display:inline-block; float:left}
+.contents {display:inline-block; margin-left: 10%}
+</style>
+{{  script }}
+{% endblock %}
+
+{% block sidebar %}
+
+{{ sidebar }}
+
+{% endblock %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+{{ body }}
+
+{% endblock %}
