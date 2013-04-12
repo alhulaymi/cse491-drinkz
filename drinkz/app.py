@@ -2,24 +2,44 @@
 from wsgiref.simple_server import make_server
 import urlparse
 import simplejson
-
+import cgi, cgitb
+import jinja2
+cgitb.enable(display=0, logdir="/path/to/logdir")
 import os
 
 import db, recipes
+import load_bulk_data
+
+
+
+
+
+
 
 def load_db_file(file_name):
     db.load_db(file_name)
 
 
 def printMenu():
-    menu = """</br>
-    </br>
-    <h3> Menu </h3>
+    menu = """
+    <h2> Menu </h2>
     <a href='/'>Home</a></br>
+    
+    <h3> Show </h3>
     <a href='recipes'>Recipes</a></br>
     <a href='inventory'>Inventory</a></br>
     <a href='liquor_types'>Liquor Types</a></br>
+    
+    <h3> Add </h3>
+    <a href='add_recipe_form'>Recipes</a></br>
+    <a href='add_inventory_form'>Inventory</a></br>
+    <a href='add_type_form'>Liquor Types</a></br>
+        
+        
+    
+    <h3> Other </h3>
     <a href='convert_to_ml'>Convert amount</a></br>
+    <a href='upload'>Upload Data</a></br>
     """
     
     return menu
@@ -34,12 +54,31 @@ dispatch = {
     '/liquor_types' : 'liquor_types',
     '/convert_result' : 'convert_result',
     '/convert_to_ml' : 'convert_form',
-    '/rpc'  : 'dispatch_rpc'
+    '/rpc'  : 'dispatch_rpc',
+    '/upload' : 'upload_file_form',
+    '/upload_file_script' : 'upload_file_script',
+    '/add_type_form' : 'add_type_form',
+    '/add_type_script' : 'add_type_script',
+    '/add_recipe_form' : 'add_recipe_form',
+    '/add_recipe_script_first' : 'add_recipe_script_first',
+    '/add_recipe_script_second' : 'add_recipe_script_second',
+    '/add_inventory_form' : "add_inventory_form",
+    '/add_inventory_script' : "add_inventory_script",
+    '/add_inventory_script' : "add_inventory_script"
 }
 
 html_headers = [('Content-type', 'text/html')]
 
-class SimpleApp(object): 
+class SimpleApp(object):
+    def load_bulk_data_types(self,file_name):
+        return load_bulk_data.load_bottle_types(file_name)
+
+    def load_bulk_data_inventory(self,file_name):
+        return load_bulk_data.load_inventory(file_name)
+        
+    def load_bulk_data_recipes(self,file_name):
+            return load_bulk_data.load_recipes(file_name)
+        
     def __call__(self, environ, start_response):
 
         path = environ['PATH_INFO']
@@ -60,34 +99,24 @@ class SimpleApp(object):
         db.load_db(file_name)
         
     def buildHtmlPage(self,title,head,body):
-        page = """
-                        <html>
-                        <head>
-                      """
-        page = page + head
-        
-        page = page + """
-                        <style type=\"text/css\">
-                        h1 {color:red;}
-                        p {color:blue;}
-                        </style>
-                        </head>
-                        <body>
-                      """
-        page = page +"<h1>" + title + "</h1>"
         
         
-        page = page + body
+        vars = dict(script = head, title = title, body = body, sidebar = printMenu())
         
-        page = page + "</body>"
-        
-        return page
+        #return page
+        loader = jinja2.FileSystemLoader('../templates')
+        env = jinja2.Environment(loader=loader)
+        filename = "page.html"
+        template = env.get_template(filename)
+        return_value = template.render(vars)
+        #print return_value
+        return str(return_value)
             
     def index(self, environ, start_response):
         
         data = """
                 <input type=\"button\" onclick=\"legalNotice()\" value=\"Legal Note\" />"""
-        data = data + printMenu()
+        #data = data + printMenu()
         script = """
                 <script>
                 function legalNotice()
@@ -124,7 +153,7 @@ class SimpleApp(object):
 
         menu = printMenu()
         
-        data = data + menu
+        #data = data + menu
         data = self.buildHtmlPage("Recipes","",data)
         start_response('200 OK', list(html_headers))
         return [data]
@@ -140,14 +169,15 @@ class SimpleApp(object):
     def inventory(self, environ, start_response):
         content_type = 'text/html'
         data = """
+        <div class='info'>
         <table border=\"1\" cellpadding =\"5\">
         <tr><th>Manfacturer</th><th>Liquor</th><th>Amount</th></tr>
         """
         for item in db.get_liquor_inventory_with_amounts():
             data = data + "<tr><td> "+ item[0] +" </td><td> "+item[1]+" </td><td> "+item[2]+" </td></tr>"
-        data = data + "</table>"
+        data = data + "</table></div>"
         
-        data = data + printMenu()
+        #data = data + printMenu()
         data = self.buildHtmlPage("Inventory","",data)
         start_response('200 OK', [('Content-type', content_type)])
         return [data]
@@ -163,7 +193,7 @@ class SimpleApp(object):
         
         data = data + "</table>"
         
-        data = data + printMenu()
+        #data = data + printMenu()
         data = self.buildHtmlPage("Liquor Types","",data)
         start_response('200 OK', [('Content-type', content_type)])
         return [data]
@@ -181,7 +211,81 @@ class SimpleApp(object):
         data = self.buildHtmlPage("Conversion Witchcraft",script,data)
         start_response('200 OK', list(html_headers))
         return [data]
-   
+        
+        
+    def upload_file_form(self, environ, start_response):
+        data = """
+        <form action='upload_file_script' enctype='multipart/form-data' method='POST'>
+        input file of data: <input type='file' name='file'></br>
+        Contents of file: </br>
+        <input type='radio' name='file_type' value='types' checked> Liquor Types </br>
+        <input type='radio' name='file_type' value='inventory'> Cabinet Inventory </br>
+        <input type='radio' name='file_type' value='recipes'> Recipes List </br>
+        <input type='submit' value='upload'>
+        </form>
+        """
+        script = ""
+        data = self.buildHtmlPage("Data File",script,data)
+        start_response('200 OK', list(html_headers))
+        return [data]
+        
+    def upload_file_script(self, environ, start_response):
+        data = ""
+        
+        script = ""
+        #http://stackoverflow.com/questions/530526/accessing-post-data-from-wsgi
+        post_env = environ.copy()
+        post_env['QUERY_STRING'] = ''
+        form = cgi.FieldStorage(fp=environ['wsgi.input'], environ=post_env)
+        
+        
+        fileitem = form["file"]
+        
+        destination_file_location = ""
+        print form["file_type"].value
+        
+        if form["file_type"].value == "types":
+            destination_file_location = "db_types_data.txt"
+        elif form["file_type"].value == "inventory":
+            destination_file_location = "db_inventory_data.txt"
+        elif form["file_type"].value == "recipes":
+            destination_file_location = "db_recipes_data.txt"
+        
+
+        data = ""
+        
+        
+        if fileitem.file:
+            destination_file = open(destination_file_location,"w")
+            # It's an uploaded file; count lines
+            linecount = 0
+            while 1:
+                line = fileitem.file.readline()
+                if not line: break
+                destination_file.write(line)
+                linecount = linecount + 1
+            destination_file.close()
+        
+        fp = open(destination_file_location)
+        
+        if form["file_type"].value == "types":
+             items = self.load_bulk_data_types(fp)
+        elif form["file_type"].value == "inventory":
+             items = self.load_bulk_data_inventory(fp)
+        elif form["file_type"].value == "recipes":
+             items = self.load_bulk_data_recipes(fp)
+
+        fp.close()
+        
+        data = data + str(items) + " items added </br>"
+        
+        data = data + "file recieved, proccssed and saved as " + destination_file_location
+        #data = data + printMenu()
+        
+        data = self.buildHtmlPage("File received ",script,data)
+        start_response('200 OK', list(html_headers))
+        return [data]
+        
     def convert_result(self, environ, start_response):
         formdata = environ['QUERY_STRING']
         results = urlparse.parse_qs(formdata)
@@ -191,11 +295,173 @@ class SimpleApp(object):
         content_type = 'text/html'
         data = "Amount entered: %s:" % (str(ml_amount)+" ml")
         
-        data = data + printMenu()
+        #data = data + printMenu()
         data = self.buildHtmlPage("The Witch Has Spoken","",data)
         start_response('200 OK', list(html_headers))
         return [data]
+    
+    def add_type_form(self, environ, start_response):
+        data = """
+        <form action='add_type_script'>
+        <table>
+        <tr>
+        <th>Manufacturer:</th> <td><input type='text' name='mfg'></td>
+        </tr>
+        <tr>
+        <th>Liquor:</th> <td><input type='text' name='liquor'></td>
+        </tr>
+        <tr>
+        <th>Type:</th> <td><input type='text' name='type'></td>
+        </tr>
+        </table>
+        <input type='submit' value='Add'>
+        </form>
+        """
+        script = ""
+        data = self.buildHtmlPage("Add Bottle Type Form",script,data)
+        start_response('200 OK', list(html_headers))
+        return [data]
+        
+    def add_type_script(self, environ, start_response):
+        formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
 
+        mfg = results['mfg'][0]
+        liquor = results['liquor'][0]
+        type = results['type'][0]
+        
+        db.add_bottle_type(mfg,liquor,type)
+        
+
+        content_type = 'text/html'
+        
+        data = "Added Bottle type: " +type+ " of " + liquor + " made by "+mfg
+        #data = data + printMenu()
+        data = self.buildHtmlPage("One more type","",data)
+        start_response('200 OK', list(html_headers))
+        return [data]
+        
+    def add_inventory_form(self, environ, start_response):
+        data = """
+        <form action='add_inventory_script'>
+        <table>
+        <tr>
+        <th>Manufacturer:</th> <td><input type='text' name='mfg'></td>
+        </tr>
+        <tr>
+        <th>Liquor:</th> <td><input type='text' name='liquor'></td>
+        </tr>
+        <tr>
+        <th>Amount:</th> <td><input type='text' name='amount'>i.e. 13.2 oz</td>
+        </tr>
+        </table>
+        <input type='submit' value='Add'>
+        </form>
+        """
+        script = ""
+        data = self.buildHtmlPage("Add Bottle To Inventory Form",script,data)
+        start_response('200 OK', list(html_headers))
+        return [data]
+    
+    def add_recipe_form(self, environ, start_response):
+        data = """
+        <form action='add_recipe_script_first'>
+        <table>
+        <tr>
+        <th>How many ingredients in the recipe?</th> <td><input type='text' name='no_ingredients'></td>
+        </tr>
+        </table>
+        <input type='submit' value='Next>>'>
+        </form>
+        """
+        script = ""
+        data = self.buildHtmlPage("Add Recipe Form 1",script,data)
+        start_response('200 OK', list(html_headers))
+        return [data]
+        
+    def add_recipe_script_first(self, environ, start_response):
+        formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
+
+        print results['no_ingredients'][0]
+        ingredients = int(results['no_ingredients'][0]);
+        
+        
+        data = """
+        <form action='add_recipe_script_second'>
+        <input type='text' placeholder='Recipe Name' name='recipe_name'>
+        <table>
+        <tr>"""
+        for i in range(ingredients):
+            data = data + "<th>Drink: </th><td><input type='text' name='no_ingredients"+str(i)+ """' value='drink'></td>
+                             <th>Amount: </th><td><td><input type='text' value='0 ml' name='amount"""+str(i) +"'></td>"
+            data = data + "</tr>"
+        
+        data = data +"""
+        </table>
+        """
+        
+        data = data + " <input type='hidden' name='no_ing' value='"+str(ingredients)+"""'>
+        <input type='submit' value='Add'>
+        </form>
+        """
+        script = ""
+        data = self.buildHtmlPage("Add Recipe Form 2",script,data)
+        start_response('200 OK', list(html_headers))
+        return [data]
+        
+    def add_recipe_script_second(self, environ, start_response):
+        formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
+        
+        no_ing = int(results['no_ing'][0]);
+        ingredients = []
+        
+        for i in range(no_ing):
+            drink = results['no_ingredients'+str(i)][0]
+            amount = results['amount'+str(i)][0]
+            
+            ingredients.append((drink,amount))
+            
+        recipe = recipes.Recipe(results['recipe_name'][0],ingredients)
+        
+        try:
+            db.add_recipe(recipe)
+            data = "Added Recipe Successfully"
+        except db.DuplicateRecipeName:
+            data = "Recipe with name "+ results['recipe_name'][0] +"already exists"
+            
+        
+        script = ""
+        data = self.buildHtmlPage("Add Recipe Form 2",script,data)
+        start_response('200 OK', list(html_headers))
+        return [data]
+        
+    def add_inventory_script(self, environ, start_response):
+        formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
+
+        mfg = results['mfg'][0]
+        liquor = results['liquor'][0]
+        amount = results['amount'][0]
+        
+        try:
+            db.add_to_inventory(mfg,liquor,amount)
+            data = "Added "+amount+" for "+liquor+" made by "+mfg
+        except db.LiquorMissing:
+            data = "Failed to find this type!"
+            
+            
+
+        content_type = 'text/html'
+        
+        
+        #data = data + printMenu()
+        data = self.buildHtmlPage("Inventory Item Addition","",data)
+        start_response('200 OK', list(html_headers))
+        return [data]
+    
+    ##### RPC API ########################################################################
     def dispatch_rpc(self, environ, start_response):
         # POST requests deliver input data via a file-like handle,
         # with the size of the data specified by CONTENT_LENGTH;
@@ -257,11 +523,27 @@ class SimpleApp(object):
         for inventory in inventories:
             inventory_list.append((inventory[0],inventory[1]))
         return inventory_list
+        
+    def rpc_add_inventory(self,mfg,liquor,amount):
+        try:
+            db.add_to_inventory(mfg,liquor,amount)
+            data = "Added "+amount+" for "+liquor+" made by "+mfg
+        except db.LiquorMissing:
+            data = "Failed to find this type!"
+        return data
+        
+    def rpc_add_bottle_type(self,mfg,liquor,type):
+        db.add_bottle_type(mfg,liquor,type)
+        return "Added One Bottle Type"
+        
+    def rpc_add_recipe(self, name, ingredients):
+        db.add_recipe(recipes.Recipe(name,ingredients))
+        return "Added One Recipe"
     
 def form():
     return """
 <form action='convert_result'>
-How much liq... I mean fun you've got? <input type='text' name='amount' placeholder='amount unit' size'20'>
+How much liq... I mean fun you've got? <input type='text' name='amount' placeholder='amount unit' size='20'>
 <input type='submit' onclick='askAboutSoul()' value='Sell Your Soul'>
 </form>
 """

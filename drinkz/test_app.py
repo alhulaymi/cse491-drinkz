@@ -1,7 +1,7 @@
 import app, db, recipes
 import urllib
 
-def test_recipes():
+def test_app():
     db._reset_db()
     recipe1 = recipes.Recipe('vodka martini', [('vermouth', '1.5 oz')])
 

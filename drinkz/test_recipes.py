@@ -122,3 +122,5 @@ class TestIngredients(object):
 
         missing = r.need_ingredients()
         assert missing == [('blended scotch', 500.0)]
+        
+    

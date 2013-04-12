@@ -180,3 +180,37 @@ def test_rpc_get_liquor_inventory():
     
     assert ('Content-Type', 'application/json') in headers
     assert status == '200 OK'
+
+
+
+def test_rpc_add_recipe():
+    db._reset_db()
+    
+    name = 'whiskey bath'
+    ingred = [('blended scotch', '5.5 liter')]
+    method = 'add_recipe'
+    params = [name,ingred]
+    id = 1
+    environ = {}
+    environ['PATH_INFO'] = '/rpc'
+    environ['REQUEST_METHOD'] = ('POST')
+    dic = dict(method=method, params=params, id=id)
+    s_input = simplejson.dumps(dic)
+    environ['wsgi.input'] = StringIO(s_input)    # looking for a socket? suuuuure, here's "one"
+    environ['CONTENT_LENGTH'] = len(s_input)
+    
+    d = {}
+    def my_start_response(s, h, return_in=d):
+        d['status'] = s
+        d['headers'] = h
+        
+    app_obj = app.SimpleApp()
+    results = app_obj(environ, my_start_response)
+
+    text = "".join(results)
+    status, headers = d['status'], d['headers']
+    
+    assert text.find("Added One Recipe") != -1, text
+    
+    assert ('Content-Type', 'application/json') in headers
+    assert status == '200 OK'

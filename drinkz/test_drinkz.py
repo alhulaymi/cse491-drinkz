@@ -24,6 +24,12 @@ testAmountsData1 = "./test-data/bottle-amounts-testing-data-1.txt"
 # nasty data
 testAmountsData2 = "./test-data/bottle-amounts-testing-data-2.txt"
 
+# neat data 
+testRecipesData1 = "./test-data/recipes-testing-data-1.txt"
+
+# nasty data
+testRecipesData2 = "./test-data/recipes-testing-data-2.txt"
+
 from . import db, load_bulk_data
 
 
@@ -198,6 +204,20 @@ def test_script_load_bottle_amounts_1():
     scriptpath = 'bin/load-liquor-inventory'
     module = imp.load_source('llt', scriptpath)
     exit_code = module.main([scriptpath, 'test-data/bottle-amounts-data-1.txt', 'test-data/inventory-data-1.txt'])
+
+    assert exit_code == 0, 'non zero exit code %s' % exit_code
+    
+def test_script_load_recipes_1():
+    scriptpath = 'bin/load-recipes'
+    module = imp.load_source('llt', scriptpath)
+    exit_code = module.main([scriptpath, 'test-data/recipes-testing-data-1.txt'])
+
+    assert exit_code == 0, 'non zero exit code %s' % exit_code
+    
+def test_script_load_recipes_2():
+    scriptpath = 'bin/load-recipes'
+    module = imp.load_source('llt', scriptpath)
+    exit_code = module.main([scriptpath, 'test-data/recipes-testing-data-2.txt'])
 
     assert exit_code == 0, 'non zero exit code %s' % exit_code
     

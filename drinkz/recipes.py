@@ -43,7 +43,7 @@ class Recipe(object):
                         difference_amount =  original_needed_amount - available_amount
                        
                         # we will try to find the mfg and liquor with the minimum missing amount. Otherwise, just leave it alone.
-                        # I know I could've used min() but this will make thins look simpler
+                        # I know I could've used min() but this will make thigns look simpler
                         if(difference_amount < need[1]):
                             #print "we will replace the current "+str(need[1])+" with the new differnece: "+str(difference_amount)
                             need = (need[0],difference_amount)
@@ -74,8 +74,6 @@ class Recipe(object):
             return False
         
         for i in self.ingredients:
-            print "should see something"
-            print i
             if(not (self.ingredients in other.ingredients)):
                 return False
         return True
