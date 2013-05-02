@@ -1,5 +1,6 @@
 import _mypath
 import sys
+from cStringIO import StringIO
 
 DBFile = "db.txt"
 
@@ -50,19 +51,23 @@ while 1:
         if len(request_source_list) > 1:
             request_formdata = request_source_list[1]
             environ['QUERY_STRING'] = request_formdata
-            print "=======Form: "+request_formdata
+            #print "=======Form: "+request_formdata
             
         if len(request_source_list) > 0:
             request_source = request_source_list[0]
-            print "=======Page: "+request_source
+            #print "=======Page: "+request_source
             
         if len(request_source_list) == 0:
             request_source = "/"
         
         #request_type = request.strip(' ',1)[0]
-        if request_type != "GET":
-            clientsocket.send("Only GET requests please!")
-            continue
+        if request_type == "POST":
+            s_input = request_all_list[-1]
+            #print "===POST: "+s_input
+            environ['wsgi.input'] = StringIO(s_input)
+            environ['CONTENT_LENGTH'] = len(s_input)
+            #clientsocket.send("Only GET requests please!")
+            #continue
         
         
         environ['PATH_INFO'] = request_source
@@ -76,14 +81,17 @@ while 1:
         app_obj = app.SimpleApp()    
         results = app_obj(environ, my_start_response)
         #print "results:"+str(results)
-        text = "HTTP/1.0 "+d['status']+" \n"
-        for header in d['headers']:
-            text = text + (header[0]+": "+header[1]+" \n")
-        text = text + "".join(results)
+        if request_type == "POST":
+            text = "".join(results)
+        else:
+            text = "HTTP/1.0 "+d['status']+" \n"
+            for header in d['headers']:
+                text = text + (header[0]+": "+header[1]+" \n")
+            text = text + "".join(results)
         #text = text.join(results)
         #print text
         #clientsocket.send(str(len(text)))
-        
+        #print "TEXT:  "+text
         clientsocket.send(text)
         clientsocket.close()
-        
+                

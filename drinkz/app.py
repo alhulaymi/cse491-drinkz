@@ -6,12 +6,14 @@ import cgi, cgitb
 import jinja2
 cgitb.enable(display=0, logdir="/path/to/logdir")
 import os
+import uuid
+from Cookie import SimpleCookie
 
 import db, recipes
 import load_bulk_data
 
 
-
+usernames = {}
 
 
 
@@ -40,6 +42,9 @@ def printMenu():
     <h3> Other </h3>
     <a href='convert_to_ml'>Convert amount</a></br>
     <a href='upload'>Upload Data</a></br>
+    
+    </br>
+    <a href='logout'>Log Out</a>
     """
     
     return menu
@@ -47,6 +52,9 @@ def printMenu():
 
 
 dispatch = {
+    '/login' : 'login',
+    '/logout' : 'logout',
+    '/gate' : 'gate',
     '/' : 'index',
     '/recipes' : 'recipes',
     '/error' : 'error',
@@ -125,9 +133,74 @@ class SimpleApp(object):
                 }
                 </script>
              """
+         
         data = self.buildHtmlPage("Main Page",script,data)
         start_response('200 OK', list(html_headers))
         return [data]
+    
+    def login(self, environ, start_response):
+        data = """
+            <html>
+            <head>
+                
+            </head>
+            <body>
+                <form action='/gate'>
+                    Name: <input type='text' name='name'> </br>
+                    Password: <input type='password' name='password'>
+                    <input type='submit' value='login'>
+                </form>
+            </body>
+            </html>
+        """
+        start_response('200 OK', list(html_headers))
+        return [data]
+        
+    def gate(self, environ, start_response):
+        formdata = environ['QUERY_STRING']
+        results = urlparse.parse_qs(formdata)
+
+        name = results['name'][0]
+        password = results['password'][0]
+        content_type = 'text/html'
+        
+        # authentication would go here -- is this a valid username/password,
+        # for example?
+        if name != "Hassan" or password != "hassan":
+            headers = list(html_headers)
+            headers.append(('Location', '/login'))
+            start_response('302 Found', headers)
+            return ["Redirect to home page, be patient goddammit!!!"]
+            
+        k = str(uuid.uuid4())
+        usernames[k] = name
+
+        headers = list(html_headers)
+        headers.append(('Location', '/'))
+        headers.append(('Set-Cookie', 'name1=%s' % k))
+
+        start_response('302 Found', headers)
+        return ["Redirect to home page, be patient goddammit!!!"]
+        
+    def logout(self, environ, start_response):
+        if 'HTTP_COOKIE' in environ:
+            c = SimpleCookie(environ.get('HTTP_COOKIE', ''))
+            if 'name1' in c:
+                key = c.get('name1').value
+                name1_key = key
+
+                if key in usernames:
+                    del usernames[key]
+                    print 'DELETING'
+
+        pair = ('Set-Cookie',
+                'name1=deleted; Expires=Thu, 01-Jan-1970 00:00:01 GMT;')
+        headers = list(html_headers)
+        headers.append(('Location', '/login'))
+        headers.append(pair)
+
+        start_response('302 Found', headers)
+        return ["Redirect to /login pgae ..."]
         
     def recipes(self, environ, start_response):
         content_type = 'text/html'
@@ -475,9 +548,10 @@ class SimpleApp(object):
                 #print environ['wsgi.input'].read(length)
                 #print "-=-=-=-"
                 body = environ['wsgi.input'].read(length)
+                #print "body::: "+body
                 response = self._dispatch(body) + '\n'
                 start_response('200 OK', [('Content-Type', 'application/json')])
-
+                #print "response: "+response
                 return [response]
 
         # default to a non JSON-RPC error.
@@ -558,6 +632,6 @@ if __name__ == '__main__':
     
     httpd = make_server('', port, app)
     print "Serving on port %d..." % port
-    print "Try using a Web browser to go to http://%s:%d/" % \
+    print "Try using a Web browser to go to http://%s:%d/login" % \
           (socket.getfqdn(), port)
     httpd.serve_forever()

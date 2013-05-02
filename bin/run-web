@@ -17,6 +17,6 @@ app = SimpleApp()
 app.load_db_file(DBFile)
 httpd = make_server('', port, app)
 print "Serving on port %d..." % port
-print "Try using a Web browser to go to http://%s:%d/" % \
+print "Try using a Web browser to go to http://%s:%d/login" % \
 	  (socket.getfqdn(), port)
 httpd.serve_forever()
